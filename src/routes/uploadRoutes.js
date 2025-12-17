@@ -6,7 +6,7 @@ import fs from 'fs';
 
 const router = express.Router();
 
-const uploadDir = 'uploads/';
+const uploadDir = path.join(path.resolve(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
