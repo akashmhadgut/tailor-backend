@@ -2,46 +2,31 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 
-import fs from 'fs';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import dotenv from 'dotenv';
 
-const router = express.Router();
+dotenv.config();
 
-const uploadDir = path.join(path.resolve(), 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-const storage = multer.diskStorage({
-    destination(req, file, cb) {
-        cb(null, uploadDir);
-    },
-    filename(req, file, cb) {
-        cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'tailor-uploads',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'doc', 'docx'],
     },
 });
 
-function checkFileType(file, cb) {
-    const filetypes = /jpg|jpeg|png|pdf|doc|docx/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
-
-    if (extname && mimetype) {
-        return cb(null, true);
-    } else {
-        cb('Images and Documents only!');
-    }
-}
-
-const upload = multer({
-    storage,
-    limits: { fileSize: 5000000 }, // 5MB
-    fileFilter: function (req, file, cb) {
-        checkFileType(file, cb);
-    },
-});
+const upload = multer({ storage: storage });
 
 router.post('/', upload.array('files', 5), (req, res) => {
-    const filePaths = req.files.map(file => `/uploads/${file.filename}`);
+    // Cloudinary returns the URL in file.path
+    const filePaths = req.files.map(file => file.path);
     res.send(filePaths);
 });
 
