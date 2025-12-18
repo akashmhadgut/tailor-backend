@@ -29,7 +29,7 @@ try {
         cloudinary: cloudinary,
         params: {
             folder: 'tailor-uploads',
-            allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'doc', 'docx'],
+            allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'doc', 'docx', 'webp'],
         },
     });
     upload = multer({ storage: storage });
